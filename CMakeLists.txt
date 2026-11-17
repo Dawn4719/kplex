@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.16)
+project(ArbKPEnum LANGUAGES CXX)
+
+if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+    message(FATAL_ERROR "This implementation requires x86-64 with POPCNT and BMI2.")
+endif()
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(FATAL_ERROR "Use GCC or Clang on Linux.")
+endif()
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+add_executable(kplex src/main.cpp)
+set_target_properties(kplex PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+target_compile_options(kplex PRIVATE -mpopcnt -falign-functions=64)
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+    set_property(TARGET kplex PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
